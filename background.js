@@ -35,6 +35,11 @@ class MDWTubeManager {
           sendResponse({ success: true });
           break;
 
+        case 'getUserInfo':
+          const userInfo = await this.getUserInfo();
+          sendResponse({ success: true, data: userInfo });
+          break;
+
         case 'getSubscriptions':
           const subscriptions = await this.getSubscriptions();
           sendResponse({ success: true, data: subscriptions });
@@ -48,6 +53,11 @@ class MDWTubeManager {
         case 'createPlaylist':
           const playlist = await this.createPlaylist(request.title, request.description);
           sendResponse({ success: true, data: playlist });
+          break;
+
+        case 'deletePlaylist':
+          await this.deletePlaylist(request.playlistId);
+          sendResponse({ success: true });
           break;
 
         case 'addVideoToPlaylist':
@@ -158,6 +168,38 @@ class MDWTubeManager {
     }
   }
 
+  async getUserInfo() {
+    const cacheKey = 'userInfo';
+    if (this.cache.has(cacheKey)) {
+      return this.cache.get(cacheKey);
+    }
+
+    const data = await this.makeYouTubeRequest('channels', {
+      part: 'snippet,statistics',
+      mine: 'true'
+    });
+
+    if (data.items && data.items.length > 0) {
+      const channel = data.items[0];
+      const userInfo = {
+        id: channel.id,
+        title: channel.snippet.title,
+        description: channel.snippet.description,
+        thumbnail: channel.snippet.thumbnails.default.url,
+        subscriberCount: channel.statistics.subscriberCount,
+        videoCount: channel.statistics.videoCount,
+        viewCount: channel.statistics.viewCount
+      };
+
+      this.cache.set(cacheKey, userInfo);
+      setTimeout(() => this.cache.delete(cacheKey), 300000); // Cache for 5 minutes
+
+      return userInfo;
+    }
+
+    return null;
+  }
+
   // YouTube API methods
   async makeYouTubeRequest(endpoint, params = {}) {
     if (!this.accessToken) {
@@ -206,6 +248,22 @@ class MDWTubeManager {
       description: item.snippet.description
     }));
 
+    // Get additional channel details (subscriber count)
+    if (subscriptions.length > 0) {
+      const channelIds = subscriptions.map(sub => sub.channelId).join(',');
+      const channelData = await this.makeYouTubeRequest('channels', {
+        part: 'statistics',
+        id: channelIds
+      });
+
+      channelData.items.forEach(channel => {
+        const subscription = subscriptions.find(sub => sub.channelId === channel.id);
+        if (subscription) {
+          subscription.subscriberCount = this.formatNumber(channel.statistics.subscriberCount);
+        }
+      });
+    }
+
     this.cache.set(cacheKey, subscriptions);
     setTimeout(() => this.cache.delete(cacheKey), 300000); // Cache for 5 minutes
 
@@ -246,10 +304,39 @@ class MDWTubeManager {
       description: item.snippet.description
     }));
 
+    // Get additional video details (duration, view count)
+    if (videos.length > 0) {
+      const videoIds = videos.map(video => video.videoId).join(',');
+      const videoData = await this.makeYouTubeRequest('videos', {
+        part: 'contentDetails,statistics',
+        id: videoIds
+      });
+
+      videoData.items.forEach(video => {
+        const videoItem = videos.find(v => v.videoId === video.id);
+        if (videoItem) {
+          videoItem.duration = video.contentDetails.duration;
+          videoItem.viewCount = video.statistics.viewCount;
+        }
+      });
+    }
+
     this.cache.set(cacheKey, videos);
     setTimeout(() => this.cache.delete(cacheKey), 180000); // Cache for 3 minutes
 
     return videos;
+  }
+
+  formatNumber(num) {
+    if (!num) return '0';
+    
+    const number = parseInt(num);
+    if (number >= 1000000) {
+      return Math.floor(number / 1000000) + 'M';
+    } else if (number >= 1000) {
+      return Math.floor(number / 1000) + 'K';
+    }
+    return number.toString();
   }
 
   async createPlaylist(title, description = '') {
@@ -275,6 +362,21 @@ class MDWTubeManager {
     }
 
     return response.json();
+  }
+
+  async deletePlaylist(playlistId) {
+    const response = await fetch(`https://www.googleapis.com/youtube/v3/playlists?id=${playlistId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${this.accessToken}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to delete playlist: ${response.status}`);
+    }
+
+    return true;
   }
 
   async addVideoToPlaylist(playlistId, videoId, position) {

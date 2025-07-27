@@ -10,11 +10,11 @@
     }
 
     body {
-      width: 400px;
+      width: 420px;
       height: 600px;
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: #333;
+      font-family: 'Roboto', 'YouTube Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0f0f0f;
+      color: #fff;
       overflow: hidden;
     }
 
@@ -22,113 +22,193 @@
       height: 100%;
       display: flex;
       flex-direction: column;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
+      background: #0f0f0f;
     }
 
+    /* YouTube-style header */
     .header {
-      background: linear-gradient(90deg, #ff0000, #cc0000);
+      background: #212121;
       color: white;
-      padding: 15px 20px;
-      text-align: center;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #404040;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.3);
     }
 
-    .header h1 {
-      font-size: 18px;
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-logo {
+      font-size: 20px;
       font-weight: 600;
-      margin-bottom: 5px;
+      color: #ff0000;
     }
 
-    .header p {
+    .header-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: #fff;
+    }
+
+    .header-center {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .support-btn-header {
+      background: transparent;
+      border: 1px solid #606060;
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 16px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .support-btn-header:hover {
+      background: #f59e0b;
+      border-color: #f59e0b;
+      color: #000;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+    }
+
+    .user-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #ff0000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-size: 12px;
-      opacity: 0.9;
+      font-weight: 500;
+    }
+
+    .username {
+      max-width: 100px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sign-out-btn {
+      background: transparent;
+      border: 1px solid #606060;
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 18px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .sign-out-btn:hover {
+      background: #606060;
     }
 
     .auth-section {
       padding: 20px;
-      border-bottom: 1px solid #eee;
+      text-align: center;
+      background: #181818;
     }
 
     .btn {
-      width: 100%;
-      padding: 12px;
+      padding: 12px 24px;
       border: none;
-      border-radius: 8px;
+      border-radius: 24px;
       font-size: 14px;
       font-weight: 500;
       cursor: pointer;
       transition: all 0.3s ease;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
     }
 
     .btn-primary {
-      background: linear-gradient(45deg, #ff0000, #cc0000);
+      background: #ff0000;
       color: white;
     }
 
     .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 15px rgba(255, 0, 0, 0.3);
+      background: #cc0000;
     }
 
     .btn-secondary {
-      background: #f8f9fa;
-      color: #333;
-      border: 1px solid #dee2e6;
-      margin-top: 8px;
+      background: #303030;
+      color: #fff;
+      border: 1px solid #606060;
     }
 
     .btn-secondary:hover {
-      background: #e9ecef;
+      background: #404040;
     }
 
     .btn:disabled {
       opacity: 0.6;
       cursor: not-allowed;
-      transform: none;
     }
 
     .status {
       margin: 10px 0;
-      padding: 10px;
-      border-radius: 6px;
+      padding: 8px 12px;
+      border-radius: 8px;
       font-size: 12px;
       text-align: center;
     }
 
     .status.success {
-      background: #d1ecf1;
-      color: #0c5460;
-      border: 1px solid #bee5eb;
+      background: #065f46;
+      color: #10b981;
+      border: 1px solid #047857;
     }
 
     .status.error {
-      background: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
+      background: #7f1d1d;
+      color: #f87171;
+      border: 1px solid #991b1b;
     }
 
     .status.warning {
-      background: #fff3cd;
-      color: #856404;
-      border: 1px solid #ffeaa7;
+      background: #78350f;
+      color: #fbbf24;
+      border: 1px solid #92400e;
     }
 
     .status.info {
-      background: #d1ecf1;
-      color: #0c5460;
-      border: 1px solid #bee5eb;
+      background: #1e3a8a;
+      color: #60a5fa;
+      border: 1px solid #1d4ed8;
     }
 
-    /* Fixed tabs that stay when scrolling */
+    /* YouTube-style tabs */
     .tabs {
       display: flex;
-      background: #f8f9fa;
-      border-bottom: 1px solid #dee2e6;
+      background: #212121;
+      border-bottom: 1px solid #404040;
       position: sticky;
       top: 0;
       z-index: 100;
@@ -136,35 +216,36 @@
 
     .tab {
       flex: 1;
-      padding: 12px;
+      padding: 14px 16px;
       text-align: center;
       cursor: pointer;
       font-size: 13px;
       font-weight: 500;
-      color: #666;
+      color: #aaa;
       transition: all 0.2s ease;
-      border-bottom: 3px solid transparent;
+      border-bottom: 2px solid transparent;
+      position: relative;
     }
 
     .tab.active {
-      color: #ff0000;
-      background: white;
+      color: #fff;
       border-bottom-color: #ff0000;
     }
 
     .tab:hover {
-      background: rgba(255, 0, 0, 0.05);
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
     }
 
     .content {
       flex: 1;
       overflow-y: auto;
-      padding: 0;
+      background: #0f0f0f;
     }
 
     .tab-content {
       display: none;
-      padding: 15px;
+      padding: 16px;
       min-height: 100%;
     }
 
@@ -172,33 +253,377 @@
       display: block;
     }
 
-    .section-title {
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 10px;
-      color: #333;
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #404040;
     }
 
-    /* Channel Items - Improved with minimized descriptions */
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .section-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      background: transparent;
+      border: 1px solid #606060;
+      color: #fff;
+      padding: 8px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 16px;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .icon-btn:hover {
+      background: #404040;
+      border-color: #808080;
+    }
+
+    .icon-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Tooltip for icon buttons */
+    .icon-btn::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 6px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 1000;
+    }
+
+    .icon-btn:hover::after {
+      opacity: 1;
+    }
+
+    /* Video controls section - optimized */
+    .video-controls {
+      background: #181818;
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      border: 1px solid #404040;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .video-count-display {
+      font-size: 14px;
+      color: #aaa;
+      flex: 1;
+    }
+
+    .control-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .control-icon-btn {
+      background: transparent;
+      border: 1px solid #606060;
+      color: #fff;
+      padding: 8px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 14px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .control-icon-btn:hover {
+      background: #404040;
+      transform: scale(1.05);
+    }
+
+    .control-icon-btn.shuffle:hover {
+      background: #7c3aed;
+      border-color: #7c3aed;
+    }
+
+    .control-icon-btn.auto-playlist:hover {
+      background: #059669;
+      border-color: #059669;
+    }
+
+    .control-icon-btn.refresh:hover {
+      background: #404040;
+      border-color: #808080;
+    }
+
+    /* Tooltip for control buttons */
+    .control-icon-btn::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: -35px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 1000;
+    }
+
+    .control-icon-btn:hover::after {
+      opacity: 1;
+    }
+
+    /* Multi-select controls - optimized */
+    .multi-select-controls {
+      background: #212121;
+      border: 1px solid #404040;
+      border-radius: 12px;
+      padding: 8px 16px;
+      margin-bottom: 16px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .multi-select-controls.active {
+      display: flex;
+    }
+
+    .selected-count {
+      color: #ff0000;
+      font-weight: 500;
+      font-size: 14px;
+      flex: 1;
+    }
+
+    .multi-select-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .multi-icon-btn {
+      background: transparent;
+      border: 1px solid #606060;
+      color: #fff;
+      padding: 6px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 12px;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .multi-icon-btn:hover {
+      background: #404040;
+    }
+
+    .multi-icon-btn.add:hover {
+      background: #059669;
+      border-color: #059669;
+    }
+
+    .multi-icon-btn.clear:hover {
+      background: #dc2626;
+      border-color: #dc2626;
+    }
+
+    /* Tooltip for multi-select buttons */
+    .multi-icon-btn::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 1000;
+    }
+
+    .multi-icon-btn:hover::after {
+      opacity: 1;
+    }
+
+    /* Enhanced video items with better layout */
+    .video-item {
+      display: flex;
+      flex-direction: column;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      background: #181818;
+      border: 1px solid transparent;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .video-item:hover {
+      background: #212121;
+      border-color: #404040;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .video-item.selected {
+      background: #1a365d;
+      border-color: #3182ce;
+    }
+
+    .video-checkbox {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      width: 18px;
+      height: 18px;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 2;
+    }
+
+    .video-item:hover .video-checkbox,
+    .video-item.selected .video-checkbox {
+      opacity: 1;
+    }
+
+    .video-thumbnail-container {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/9;
+      overflow: hidden;
+      border-radius: 12px 12px 0 0;
+    }
+
+    .video-thumbnail {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    .video-item:hover .video-thumbnail {
+      transform: scale(1.05);
+    }
+
+    .video-duration {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .video-content {
+      padding: 12px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .video-title {
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.3;
+      margin-bottom: 6px;
+      color: #fff;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .video-stats {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: #aaa;
+      margin-bottom: 8px;
+    }
+
+    .video-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: auto;
+    }
+
+    .video-actions .btn {
+      flex: 1;
+      padding: 6px 10px;
+      font-size: 10px;
+      border-radius: 16px;
+    }
+
+    /* Channel items with improved layout */
     .channel-item {
       display: flex;
       align-items: center;
       padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 8px;
-      background: white;
-      border: 1px solid #eee;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      background: #181818;
+      border: 1px solid #404040;
       transition: all 0.2s ease;
     }
 
     .channel-item:hover {
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      border-color: #ff0000;
+      background: #212121;
+      border-color: #606060;
     }
 
     .channel-thumbnail {
-      width: 40px;
-      height: 40px;
+      width: 48px;
+      height: 48px;
       border-radius: 50%;
       margin-right: 12px;
       object-fit: cover;
@@ -207,27 +632,50 @@
 
     .channel-info {
       flex: 1;
-      min-width: 0; /* Allows text truncation */
+      min-width: 0;
     }
 
     .channel-title {
       font-weight: 500;
-      font-size: 13px;
-      margin-bottom: 3px;
+      font-size: 14px;
+      margin-bottom: 4px;
+      color: #fff;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    .channel-description {
-      font-size: 10px;
-      color: #999;
-      line-height: 1.2;
-      max-height: 24px;
-      overflow: hidden;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
+    .channel-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .channel-subscribers {
+      font-size: 12px;
+      color: #aaa;
+    }
+
+    .channel-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .video-count-input {
+      background: #303030;
+      border: 1px solid #606060;
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      width: 60px;
+    }
+
+    .video-count-input:focus {
+      outline: none;
+      border-color: #ff0000;
     }
 
     .channel-toggle {
@@ -251,7 +699,7 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background-color: #ccc;
+      background-color: #606060;
       transition: .4s;
       border-radius: 24px;
     }
@@ -276,87 +724,26 @@
       transform: translateX(20px);
     }
 
-    /* Video Items */
-    .video-item {
-      display: flex;
-      padding: 12px;
-      border-bottom: 1px solid #eee;
-      transition: background 0.2s ease;
-    }
-
-    .video-item:hover {
-      background: #f8f9fa;
-    }
-
-    .video-thumbnail {
-      width: 80px;
-      height: 45px;
-      border-radius: 4px;
-      margin-right: 12px;
-      object-fit: cover;
-      flex-shrink: 0;
-    }
-
-    .video-info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .video-title {
-      font-size: 12px;
-      font-weight: 500;
-      line-height: 1.3;
-      margin-bottom: 4px;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .video-channel {
-      font-size: 11px;
-      color: #666;
-      margin-bottom: 2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .video-published {
-      font-size: 10px;
-      color: #999;
-    }
-
-    .video-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      flex-shrink: 0;
-    }
-
-    .video-actions .btn {
-      width: auto;
-      padding: 6px 10px;
-      font-size: 10px;
-      min-width: 65px;
-    }
-
-    /* Playlist Items */
+    /* Playlist items */
     .playlist-item {
       display: flex;
       padding: 12px;
-      border-bottom: 1px solid #eee;
-      transition: background 0.2s ease;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      background: #181818;
+      border: 1px solid #404040;
+      transition: all 0.2s ease;
     }
 
     .playlist-item:hover {
-      background: #f8f9fa;
+      background: #212121;
+      border-color: #606060;
     }
 
     .playlist-thumbnail {
       width: 80px;
       height: 45px;
-      border-radius: 4px;
+      border-radius: 8px;
       margin-right: 12px;
       object-fit: cover;
       flex-shrink: 0;
@@ -368,77 +755,253 @@
     }
 
     .playlist-title {
-      font-size: 12px;
+      font-size: 14px;
       font-weight: 500;
       line-height: 1.3;
       margin-bottom: 4px;
+      color: #fff;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
 
-    .playlist-description {
-      font-size: 11px;
-      color: #666;
-      margin-bottom: 2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    .playlist-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .playlist-count {
-      font-size: 10px;
-      color: #999;
+      font-size: 12px;
+      color: #aaa;
     }
 
     .playlist-actions {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 6px;
       flex-shrink: 0;
     }
 
     .playlist-actions .btn {
-      width: auto;
-      padding: 6px 10px;
-      font-size: 10px;
-      min-width: 65px;
+      padding: 6px 12px;
+      font-size: 11px;
+      min-width: 70px;
+    }
+
+    .btn-delete {
+      background: #dc2626;
+      color: white;
+    }
+
+    .btn-delete:hover {
+      background: #b91c1c;
     }
 
     .create-playlist {
+      background: #181818;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      border: 1px solid #404040;
+    }
+
+    .create-playlist-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .create-playlist-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: #fff;
+    }
+
+    .create-playlist-form {
       display: flex;
       gap: 8px;
-      margin-bottom: 15px;
     }
 
     .create-playlist input {
       flex: 1;
-      padding: 8px 12px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 12px;
+      background: #303030;
+      border: 1px solid #606060;
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .create-playlist input:focus {
+      outline: none;
+      border-color: #ff0000;
     }
 
     .create-playlist button {
-      padding: 8px 12px;
-      background: #28a745;
+      padding: 10px 20px;
+      background: #ff0000;
       color: white;
       border: none;
-      border-radius: 6px;
-      font-size: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
       cursor: pointer;
       white-space: nowrap;
     }
 
     .create-playlist button:hover {
-      background: #218838;
+      background: #cc0000;
+    }
+
+    /* Support Modal */
+    .support-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+    }
+
+    .support-modal.active {
+      display: flex;
+    }
+
+    .support-modal-content {
+      background: #181818;
+      border-radius: 16px;
+      padding: 24px;
+      width: 90%;
+      max-width: 380px;
+      border: 1px solid #404040;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      animation: modalSlideIn 0.3s ease-out;
+    }
+
+    @keyframes modalSlideIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    .support-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #404040;
+    }
+
+    .support-modal-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .support-modal-close {
+      background: transparent;
+      border: none;
+      color: #aaa;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+
+    .support-modal-close:hover {
+      background: #404040;
+      color: #fff;
+    }
+
+    .support-content {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .support-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .support-label {
+      font-size: 14px;
+      color: #fff;
+      font-weight: 500;
+    }
+
+    .support-links {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .support-link {
+      background: #303030;
+      color: #fff;
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      border: 1px solid #606060;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .support-link:hover {
+      background: #404040;
+      border-color: #808080;
+    }
+
+    .support-link.donate {
+      background: #f59e0b;
+      border-color: #f59e0b;
+      color: #000;
+    }
+
+    .support-link.donate:hover {
+      background: #d97706;
+      border-color: #d97706;
+    }
+
+    .support-footer {
+      text-align: center;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #404040;
+    }
+
+    .support-footer p {
+      font-size: 12px;
+      color: #aaa;
+      line-height: 1.4;
     }
 
     .empty-state {
       text-align: center;
       padding: 40px 20px;
-      color: #666;
+      color: #aaa;
       font-size: 14px;
     }
 
@@ -446,18 +1009,36 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-direction: column;
       padding: 40px;
-      color: #666;
+      color: #aaa;
+      gap: 12px;
+    }
+
+    .loading-spinner-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
     .spinner {
       width: 20px;
       height: 20px;
-      border: 2px solid #f3f3f3;
+      border: 2px solid #404040;
       border-top: 2px solid #ff0000;
       border-radius: 50%;
       animation: spin 1s linear infinite;
-      margin-right: 10px;
+    }
+
+    .loading-text {
+      font-size: 14px;
+      color: #aaa;
+    }
+
+    .loading-wait {
+      font-size: 12px;
+      color: #666;
+      font-style: italic;
     }
 
     @keyframes spin {
@@ -465,51 +1046,117 @@
       100% { transform: rotate(360deg); }
     }
 
+    /* Loading overlay for sections */
+    .section-loading {
+      position: relative;
+    }
+
+    .section-loading::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 15, 15, 0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      gap: 12px;
+    }
+
+    .section-loading::before {
+      content: 'Please wait...';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, calc(-50% + 25px));
+      color: #aaa;
+      font-size: 12px;
+      z-index: 11;
+    }
+
+    .section-loading .spinner-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, calc(-50% - 10px));
+      width: 20px;
+      height: 20px;
+      border: 2px solid #404040;
+      border-top: 2px solid #ff0000;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      z-index: 11;
+    }
+
     /* Scrollbar styling */
     .content::-webkit-scrollbar {
-      width: 6px;
+      width: 8px;
     }
 
     .content::-webkit-scrollbar-track {
-      background: #f1f1f1;
+      background: #181818;
     }
 
     .content::-webkit-scrollbar-thumb {
-      background: #c1c1c1;
-      border-radius: 3px;
+      background: #606060;
+      border-radius: 4px;
     }
 
     .content::-webkit-scrollbar-thumb:hover {
-      background: #a1a1a1;
+      background: #808080;
     }
 
-    /* External link icon */
     .external-link::after {
       content: " ↗";
       font-size: 10px;
       opacity: 0.7;
     }
+
+    /* Video grid layout for better space usage */
+    .videos-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 450px) {
+      .videos-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="container">
+    <!-- YouTube-style header -->
     <div class="header">
-      <h1>🎵 MDW Tube</h1>
-      <p>Smart YouTube Playlist Manager</p>
+      <div class="header-left">
+        <div class="header-logo">🎵</div>
+        <div class="header-title">MDW Tube</div>
+      </div>
+      <div class="header-center">
+        <button id="supportBtnHeader" class="support-btn-header">
+          💝 Support
+        </button>
+      </div>
+      <div class="header-right" id="headerRight">
+        <!-- Will be populated by JavaScript -->
+      </div>
     </div>
 
-    <div class="auth-section">
+    <!-- Auth section for non-authenticated users -->
+    <div id="authSection" class="auth-section">
       <button id="loginBtn" class="btn btn-primary">
         🔐 Sign in with Google
       </button>
-      
-      <button id="logoutBtn" class="btn btn-secondary" style="display: none;">
-        🚪 Sign Out
-      </button>
-      
       <div id="status" class="status"></div>
     </div>
 
+    <!-- Main content for authenticated users -->
     <div id="mainContent" style="display: none;">
       <div class="tabs">
         <div class="tab active" data-tab="recommendations">📺 Videos</div>
@@ -520,38 +1167,153 @@
       <div class="content">
         <!-- Recommendations Tab -->
         <div id="recommendationsTab" class="tab-content active">
-          <div class="section-title">Recommended Videos</div>
-          <div id="recommendationsContent">
-            <div class="empty-state">Enable some channels first</div>
+          <div class="section-header">
+            <div class="section-title">Recommended Videos</div>
+          </div>
+
+          <!-- Video Controls - Optimized -->
+          <div class="video-controls">
+            <span class="video-count-display" id="videoCountDisplay">Loading videos...</span>
+            <div class="control-actions">
+              <button id="shuffleBtn" class="control-icon-btn shuffle" data-tooltip="Shuffle videos">
+                🔀
+              </button>
+              <button id="autoPlaylistBtn" class="control-icon-btn auto-playlist" data-tooltip="Create auto playlist">
+                📅
+              </button>
+              <button id="refreshBtn" class="control-icon-btn refresh" data-tooltip="Load more videos">
+                🔄
+              </button>
+            </div>
+          </div>
+
+          <!-- Multi-select controls - Optimized -->
+          <div id="multiSelectControls" class="multi-select-controls">
+            <span id="selectedCount" class="selected-count">0 selected</span>
+            <div class="multi-select-actions">
+              <button id="addSelectedBtn" class="multi-icon-btn add" data-tooltip="Add to playlist">
+                ➕
+              </button>
+              <button id="clearSelectionBtn" class="multi-icon-btn clear" data-tooltip="Clear selection">
+                ✖️
+              </button>
+            </div>
+          </div>
+
+          <div id="recommendationsContent" class="videos-grid">
+            <div class="loading">
+              <div class="loading-spinner-row">
+                <div class="spinner"></div>
+                <span class="loading-text">Loading videos...</span>
+              </div>
+              <span class="loading-wait">Please wait...</span>
+            </div>
           </div>
         </div>
 
         <!-- Channels Tab -->
         <div id="channelsTab" class="tab-content">
-          <div class="section-title">Subscribed Channels</div>
+          <div class="section-header">
+            <div class="section-title">Subscribed Channels</div>
+            <div class="section-actions">
+              <button id="refreshChannelsBtn" class="icon-btn" data-tooltip="Refresh channels data">
+                🔄
+              </button>
+            </div>
+          </div>
           <div id="channelsContent">
             <div class="loading">
-              <div class="spinner"></div>
-              Loading channels...
+              <div class="loading-spinner-row">
+                <div class="spinner"></div>
+                <span class="loading-text">Loading channels...</span>
+              </div>
+              <span class="loading-wait">Please wait...</span>
             </div>
           </div>
         </div>
 
         <!-- Playlists Tab -->
         <div id="playlistsTab" class="tab-content">
-          <div class="section-title">Create New Playlist</div>
           <div class="create-playlist">
-            <input type="text" id="playlistTitle" placeholder="Enter playlist name...">
-            <button id="createPlaylistBtn">Create</button>
-          </div>
-          
-          <div class="section-title">Your Playlists</div>
-          <div id="playlistsContent">
-            <div class="loading">
-              <div class="spinner"></div>
-              Loading playlists...
+            <div class="create-playlist-header">
+              <div class="create-playlist-title">Create New Playlist</div>
+            </div>
+            <div class="create-playlist-form">
+              <input type="text" id="playlistTitle" placeholder="Enter playlist name...">
+              <button id="createPlaylistBtn">Create</button>
             </div>
           </div>
+          
+          <div class="section-header">
+            <div class="section-title">Your Playlists</div>
+            <div class="section-actions">
+              <button id="refreshPlaylistsBtn" class="icon-btn" data-tooltip="Refresh playlists">
+                🔄
+              </button>
+            </div>
+          </div>
+          <div id="playlistsContent">
+            <div class="loading">
+              <div class="loading-spinner-row">
+                <div class="spinner"></div>
+                <span class="loading-text">Loading playlists...</span>
+              </div>
+              <span class="loading-wait">Please wait...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Support Modal -->
+    <div id="supportModal" class="support-modal">
+      <div class="support-modal-content">
+        <div class="support-modal-header">
+          <div class="support-modal-title">
+            💝 Support MDW Tube
+          </div>
+          <button id="supportModalClose" class="support-modal-close">
+            ×
+          </button>
+        </div>
+        
+        <div class="support-content">
+          <div class="support-row">
+            <span class="support-label">🎯 Help us improve:</span>
+            <div class="support-links">
+              <a href="https://github.com/MichelDevWeb/mdw-tube" target="_blank" class="support-link">
+                📁 GitHub
+              </a>
+              <a href="https://chromewebstore.google.com/detail/hlnkfpmbfagaepobpmbinjfmmfkajfmd" target="_blank" class="support-link">
+                ⭐ Rate Extension
+              </a>
+            </div>
+          </div>
+          
+          <div class="support-row">
+            <span class="support-label">💬 Contact:</span>
+            <div class="support-links">
+              <a href="mailto:micheldevweb2020@gmail.com" class="support-link">
+                📧 Email
+              </a>
+            </div>
+          </div>
+          
+          <div class="support-row">
+            <span class="support-label">☕ Buy me coffee:</span>
+            <div class="support-links">
+              <button id="donateBtn" class="support-link donate">
+                💝 Donate
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="support-footer">
+          <p>
+            Made with ❤️ by Michel Dev Web<br>
+            Thanks for using MDW Tube!
+          </p>
         </div>
       </div>
     </div>

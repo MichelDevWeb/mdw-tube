@@ -3,23 +3,28 @@ class MDWTubePopup {
     constructor() {
         this.currentTab = 'recommendations';
         this.enabledChannels = new Set();
+        this.channelVideoCount = new Map(); // Store video count per channel
         this.currentPlaylist = null;
         this.subscriptions = [];
         this.playlists = [];
         this.isAuthenticated = false;
+        this.userInfo = null;
+        this.selectedVideos = new Set();
+        this.watchedVideos = new Set();
+        this.allVideos = [];
         this.init();
     }
 
     async init() {
         this.setupEventListeners();
+        await this.loadWatchedVideos();
+        await this.loadChannelVideoCount();
         await this.checkAuthStatus();
-        this.loadInitialData();
     }
 
     setupEventListeners() {
         // Auth buttons
         document.getElementById('loginBtn').addEventListener('click', () => this.login());
-        document.getElementById('logoutBtn').addEventListener('click', () => this.logout());
 
         // Tab switching
         document.querySelectorAll('.tab').forEach(tab => {
@@ -32,6 +37,38 @@ class MDWTubePopup {
             if (e.key === 'Enter') this.createPlaylist();
         });
 
+        // Video controls
+        document.getElementById('shuffleBtn').addEventListener('click', () => this.shuffleVideos());
+        document.getElementById('autoPlaylistBtn').addEventListener('click', () => this.createAutoPlaylist());
+        document.getElementById('refreshBtn').addEventListener('click', () => this.refreshVideos());
+
+        // Multi-select controls
+        document.getElementById('addSelectedBtn').addEventListener('click', () => this.addSelectedToPlaylist());
+        document.getElementById('clearSelectionBtn').addEventListener('click', () => this.clearSelection());
+
+        // Refresh buttons for tabs
+        document.getElementById('refreshChannelsBtn').addEventListener('click', () => this.refreshChannels());
+        document.getElementById('refreshPlaylistsBtn').addEventListener('click', () => this.refreshPlaylists());
+
+        // Support modal
+        document.getElementById('supportBtnHeader').addEventListener('click', () => this.openSupportModal());
+        document.getElementById('supportModalClose').addEventListener('click', () => this.closeSupportModal());
+        document.getElementById('donateBtn').addEventListener('click', () => this.showDonateInfo());
+        
+        // Close modal when clicking outside
+        document.getElementById('supportModal').addEventListener('click', (e) => {
+            if (e.target.id === 'supportModal') {
+                this.closeSupportModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('supportModal').classList.contains('active')) {
+                this.closeSupportModal();
+            }
+        });
+
         // Global error handling
         window.addEventListener('unhandledrejection', (e) => {
             console.error('Unhandled promise rejection:', e.reason);
@@ -39,13 +76,89 @@ class MDWTubePopup {
         });
     }
 
+    openSupportModal() {
+        document.getElementById('supportModal').classList.add('active');
+    }
+
+    closeSupportModal() {
+        document.getElementById('supportModal').classList.remove('active');
+    }
+
+    showDonateInfo() {
+        alert('Thank you for considering supporting MDW Tube! 💝\n\nYou can support the development by:\n\n1. ⭐ Rating the extension on Chrome Web Store\n2. 🐛 Reporting bugs on GitHub\n3. 💡 Suggesting new features\n4. 📧 Sending feedback to micheldevweb2020@gmail.com\n\nYour support means the world to us!');
+    }
+
+    setLoading(elementId, isLoading, loadingText = 'Loading...') {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+
+        if (isLoading) {
+            element.classList.add('section-loading');
+            // Create spinner overlay if it doesn't exist
+            if (!element.querySelector('.spinner-overlay')) {
+                const spinner = document.createElement('div');
+                spinner.className = 'spinner-overlay';
+                element.appendChild(spinner);
+            }
+        } else {
+            element.classList.remove('section-loading');
+            // Remove spinner overlay
+            const spinner = element.querySelector('.spinner-overlay');
+            if (spinner) {
+                spinner.remove();
+            }
+        }
+    }
+
+    async loadChannelVideoCount() {
+        try {
+            const result = await chrome.storage.local.get(['channelVideoCount']);
+            if (result.channelVideoCount) {
+                this.channelVideoCount = new Map(Object.entries(result.channelVideoCount));
+            }
+        } catch (error) {
+            console.error('Error loading channel video count:', error);
+        }
+    }
+
+    async saveChannelVideoCount() {
+        try {
+            const countObject = Object.fromEntries(this.channelVideoCount);
+            await chrome.storage.local.set({
+                channelVideoCount: countObject
+            });
+        } catch (error) {
+            console.error('Error saving channel video count:', error);
+        }
+    }
+
+    getTotalVideoCount() {
+        let total = 0;
+        this.enabledChannels.forEach(channelId => {
+            total += this.channelVideoCount.get(channelId) || 5;
+        });
+        return total;
+    }
+
+    updateVideoCountDisplay() {
+        const display = document.getElementById('videoCountDisplay');
+        if (display) {
+            const total = this.getTotalVideoCount();
+            const enabledCount = this.enabledChannels.size;
+            display.textContent = `${total} videos from ${enabledCount} channels`;
+        }
+    }
+
     async checkAuthStatus() {
         try {
+            this.setLoading('authSection', true, 'Checking authentication...');
             const response = await this.sendMessage({ action: 'authenticate' });
             if (response.success) {
                 this.isAuthenticated = true;
+                await this.loadUserInfo();
                 this.showLoggedInState();
                 this.showStatus('Authentication successful', 'success');
+                await this.loadInitialData();
             } else {
                 this.isAuthenticated = false;
                 this.showLoggedOutState();
@@ -56,6 +169,19 @@ class MDWTubePopup {
             this.isAuthenticated = false;
             this.showLoggedOutState();
             this.showStatus('Authentication check failed', 'error');
+        } finally {
+            this.setLoading('authSection', false);
+        }
+    }
+
+    async loadUserInfo() {
+        try {
+            const response = await this.sendMessage({ action: 'getUserInfo' });
+            if (response.success) {
+                this.userInfo = response.data;
+            }
+        } catch (error) {
+            console.error('Error loading user info:', error);
         }
     }
 
@@ -64,12 +190,14 @@ class MDWTubePopup {
         
         try {
             loginBtn.disabled = true;
+            this.setLoading('authSection', true, 'Signing in...');
             this.showStatus('Signing in...', 'info');
 
             const response = await this.sendMessage({ action: 'authenticate' });
             
             if (response.success) {
                 this.isAuthenticated = true;
+                await this.loadUserInfo();
                 this.showStatus('Sign in successful!', 'success');
                 this.showLoggedInState();
                 await this.loadInitialData();
@@ -83,13 +211,13 @@ class MDWTubePopup {
             this.showLoggedOutState();
         } finally {
             loginBtn.disabled = false;
+            this.setLoading('authSection', false);
         }
     }
 
     async logout() {
         try {
-            const logoutBtn = document.getElementById('logoutBtn');
-            logoutBtn.disabled = true;
+            this.setLoading('headerRight', true, 'Signing out...');
             this.showStatus('Signing out...', 'info');
 
             // Revoke the Google OAuth token
@@ -97,7 +225,6 @@ class MDWTubePopup {
                 await this.sendMessage({ action: 'revokeToken' });
             } catch (error) {
                 console.warn('Token revocation failed:', error);
-                // Continue with logout even if revocation fails
             }
 
             // Clear Chrome identity cache
@@ -119,6 +246,7 @@ class MDWTubePopup {
             await chrome.storage.local.clear();
             
             this.isAuthenticated = false;
+            this.userInfo = null;
             this.showLoggedOutState();
             this.showStatus('Signed out successfully', 'success');
             this.clearData();
@@ -127,9 +255,34 @@ class MDWTubePopup {
             console.error('Logout error:', error);
             this.showStatus('Logout failed', 'error');
         } finally {
-            const logoutBtn = document.getElementById('logoutBtn');
-            if (logoutBtn) logoutBtn.disabled = false;
+            this.setLoading('headerRight', false);
         }
+    }
+
+    async loadWatchedVideos() {
+        try {
+            const result = await chrome.storage.local.get(['watchedVideos']);
+            if (result.watchedVideos) {
+                this.watchedVideos = new Set(result.watchedVideos);
+            }
+        } catch (error) {
+            console.error('Error loading watched videos:', error);
+        }
+    }
+
+    async saveWatchedVideos() {
+        try {
+            await chrome.storage.local.set({
+                watchedVideos: Array.from(this.watchedVideos)
+            });
+        } catch (error) {
+            console.error('Error saving watched videos:', error);
+        }
+    }
+
+    markVideoAsWatched(videoId) {
+        this.watchedVideos.add(videoId);
+        this.saveWatchedVideos();
     }
 
     async loadInitialData() {
@@ -139,7 +292,9 @@ class MDWTubePopup {
         }
 
         try {
-            this.showStatus('Loading subscriptions...', 'info');
+            this.showStatus('Loading data...', 'info');
+            this.setLoading('channelsContent', true, 'Loading channels data...');
+            this.setLoading('playlistsContent', true, 'Loading playlists...');
             
             // Load subscriptions
             const subResponse = await this.sendMessage({ action: 'getSubscriptions' });
@@ -158,9 +313,20 @@ class MDWTubePopup {
                 this.renderPlaylists();
             }
 
+            // Load enabled channels and then load videos
+            await this.loadEnabledChannels();
+            
+            // Load initial videos if we have enabled channels
+            if (this.enabledChannels.size > 0) {
+                await this.loadRecommendations();
+            }
+
         } catch (error) {
             console.error('Error loading initial data:', error);
             this.showStatus('Failed to load data', 'error');
+        } finally {
+            this.setLoading('channelsContent', false);
+            this.setLoading('playlistsContent', false);
         }
     }
 
@@ -168,12 +334,12 @@ class MDWTubePopup {
         if (!this.isAuthenticated) return;
 
         try {
-            // Load enabled channels from storage
             const result = await chrome.storage.local.get(['enabledChannels']);
             if (result.enabledChannels) {
                 this.enabledChannels = new Set(result.enabledChannels);
             }
             this.renderSubscriptions();
+            this.updateVideoCountDisplay();
         } catch (error) {
             console.error('Error loading enabled channels:', error);
         }
@@ -184,6 +350,7 @@ class MDWTubePopup {
             await chrome.storage.local.set({
                 enabledChannels: Array.from(this.enabledChannels)
             });
+            this.updateVideoCountDisplay();
         } catch (error) {
             console.error('Error saving enabled channels:', error);
         }
@@ -209,7 +376,9 @@ class MDWTubePopup {
         // Load tab-specific data
         switch (tabName) {
             case 'recommendations':
-                this.loadRecommendations();
+                if (this.enabledChannels.size > 0 && this.allVideos.length === 0) {
+                    this.loadRecommendations();
+                }
                 break;
             case 'playlists':
                 this.loadPlaylists();
@@ -224,20 +393,24 @@ class MDWTubePopup {
         if (!this.isAuthenticated || this.enabledChannels.size === 0) {
             document.getElementById('recommendationsContent').innerHTML = 
                 '<div class="empty-state">Enable some channels first</div>';
+            this.updateMultiSelectControls();
+            this.updateVideoCountDisplay();
             return;
         }
 
         try {
+            this.setLoading('recommendationsContent', true, 'Loading videos...');
             this.showStatus('Loading recommendations...', 'info');
             const enabledChannelIds = Array.from(this.enabledChannels);
             const videos = [];
 
-            // Load videos from enabled channels
+            // Load videos from enabled channels using per-channel video count
             for (const channelId of enabledChannelIds) {
+                const videoCount = this.channelVideoCount.get(channelId) || 5;
                 const response = await this.sendMessage({ 
                     action: 'getChannelVideos', 
                     channelId: channelId,
-                    limit: 5
+                    limit: videoCount
                 });
                 
                 if (response.success) {
@@ -245,12 +418,284 @@ class MDWTubePopup {
                 }
             }
 
-            this.renderRecommendations(videos);
-            this.showStatus(`Loaded ${videos.length} recommendations`, 'success');
+            // Filter out watched videos
+            const unwatchedVideos = videos.filter(video => !this.watchedVideos.has(video.videoId));
+            
+            // Sort by published date (newest first)
+            unwatchedVideos.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+
+            this.allVideos = unwatchedVideos;
+            this.renderRecommendations(unwatchedVideos);
+            this.showStatus(`Loaded ${unwatchedVideos.length} unwatched videos`, 'success');
+            this.updateVideoCountDisplay();
 
         } catch (error) {
             console.error('Error loading recommendations:', error);
             this.showStatus('Failed to load recommendations', 'error');
+            document.getElementById('recommendationsContent').innerHTML = 
+                '<div class="empty-state">Failed to load videos. Try refreshing.</div>';
+        } finally {
+            this.setLoading('recommendationsContent', false);
+        }
+    }
+
+    async refreshVideos() {
+        if (!this.isAuthenticated || this.enabledChannels.size === 0) {
+            this.showStatus('No channels enabled for refresh', 'warning');
+            return;
+        }
+
+        try {
+            this.setLoading('recommendationsContent', true, 'Loading more videos...');
+            this.showStatus('Loading more videos...', 'info');
+            
+            // Clear current videos and reload fresh content
+            this.allVideos = [];
+            this.clearSelection();
+            
+            await this.loadRecommendations();
+            
+        } catch (error) {
+            console.error('Error refreshing videos:', error);
+            this.showStatus('Failed to refresh videos', 'error');
+        }
+    }
+
+    shuffleVideos() {
+        if (this.allVideos.length === 0) {
+            this.showStatus('No videos to shuffle', 'warning');
+            return;
+        }
+
+        // Fisher-Yates shuffle algorithm
+        const shuffled = [...this.allVideos];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+
+        this.renderRecommendations(shuffled);
+        this.showStatus('Videos shuffled!', 'success');
+    }
+
+    async createAutoPlaylist() {
+        try {
+            this.setLoading('recommendationsContent', true, 'Creating playlist...');
+            
+            // Determine which videos to add - prioritize selected videos
+            let videosToAdd = [];
+            if (this.selectedVideos.size > 0) {
+                // Use selected videos
+                videosToAdd = this.allVideos.filter(video => this.selectedVideos.has(video.videoId));
+                this.showStatus(`Creating playlist with ${videosToAdd.length} selected videos...`, 'info');
+            } else {
+                // Use all current videos
+                videosToAdd = this.allVideos;
+                this.showStatus(`Creating playlist with all ${videosToAdd.length} videos...`, 'info');
+            }
+
+            if (videosToAdd.length === 0) {
+                this.showStatus('No videos to add to playlist', 'warning');
+                return;
+            }
+
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
+            
+            // Check if playlist with this date already exists
+            let playlistName = `MDW Tube ${dateStr}`;
+            let counter = 1;
+            
+            while (this.playlists.some(p => p.title === playlistName)) {
+                counter++;
+                playlistName = `MDW Tube ${dateStr} (${counter})`;
+            }
+            
+            // Create the playlist
+            const createResponse = await this.sendMessage({
+                action: 'createPlaylist',
+                title: playlistName,
+                description: `Auto-generated playlist from MDW Tube on ${new Date().toLocaleDateString()}`
+            });
+
+            if (!createResponse.success) {
+                throw new Error(createResponse.error || 'Failed to create playlist');
+            }
+
+            const playlistId = createResponse.data.id;
+            
+            // Add videos to playlist
+            let addedCount = 0;
+            for (const video of videosToAdd) {
+                try {
+                    await this.sendMessage({
+                        action: 'addVideoToPlaylist',
+                        playlistId: playlistId,
+                        videoId: video.videoId,
+                        position: addedCount
+                    });
+                    addedCount++;
+                } catch (error) {
+                    console.warn(`Failed to add video ${video.videoId}:`, error);
+                }
+            }
+
+            this.showStatus(`Auto playlist "${playlistName}" created with ${addedCount} videos!`, 'success');
+            this.clearSelection();
+            await this.loadPlaylists();
+            
+            // Switch to playlists tab
+            this.switchTab('playlists');
+
+        } catch (error) {
+            console.error('Error creating auto playlist:', error);
+            this.showStatus('Failed to create auto playlist', 'error');
+        } finally {
+            this.setLoading('recommendationsContent', false);
+        }
+    }
+
+    async refreshChannels() {
+        if (!this.isAuthenticated) return;
+        
+        try {
+            const btn = document.getElementById('refreshChannelsBtn');
+            btn.disabled = true;
+            this.setLoading('channelsContent', true, 'Refreshing channels data...');
+            this.showStatus('Refreshing channels data...', 'info');
+
+            const response = await this.sendMessage({ action: 'getSubscriptions' });
+            if (response.success) {
+                this.subscriptions = response.data;
+                this.renderSubscriptions();
+                this.showStatus(`Refreshed ${this.subscriptions.length} channels`, 'success');
+            } else {
+                throw new Error(response.error || 'Failed to refresh channels');
+            }
+        } catch (error) {
+            console.error('Error refreshing channels:', error);
+            this.showStatus('Failed to refresh channels', 'error');
+        } finally {
+            const btn = document.getElementById('refreshChannelsBtn');
+            if (btn) btn.disabled = false;
+            this.setLoading('channelsContent', false);
+        }
+    }
+
+    async refreshPlaylists() {
+        if (!this.isAuthenticated) return;
+        
+        try {
+            const btn = document.getElementById('refreshPlaylistsBtn');
+            btn.disabled = true;
+            this.setLoading('playlistsContent', true, 'Refreshing playlists...');
+            this.showStatus('Refreshing playlists...', 'info');
+
+            const response = await this.sendMessage({ action: 'getPlaylists' });
+            if (response.success) {
+                this.playlists = response.data;
+                this.renderPlaylists();
+                this.showStatus(`Refreshed ${this.playlists.length} playlists`, 'success');
+            } else {
+                throw new Error(response.error || 'Failed to refresh playlists');
+            }
+        } catch (error) {
+            console.error('Error refreshing playlists:', error);
+            this.showStatus('Failed to refresh playlists', 'error');
+        } finally {
+            const btn = document.getElementById('refreshPlaylistsBtn');
+            if (btn) btn.disabled = false;
+            this.setLoading('playlistsContent', false);
+        }
+    }
+
+    toggleVideoSelection(videoId) {
+        if (this.selectedVideos.has(videoId)) {
+            this.selectedVideos.delete(videoId);
+        } else {
+            this.selectedVideos.add(videoId);
+        }
+        this.updateMultiSelectControls();
+        this.updateVideoSelectionUI();
+    }
+
+    clearSelection() {
+        this.selectedVideos.clear();
+        this.updateMultiSelectControls();
+        this.updateVideoSelectionUI();
+    }
+
+    updateMultiSelectControls() {
+        const controls = document.getElementById('multiSelectControls');
+        const countElement = document.getElementById('selectedCount');
+        
+        if (this.selectedVideos.size > 0) {
+            controls.classList.add('active');
+            countElement.textContent = `${this.selectedVideos.size} selected`;
+        } else {
+            controls.classList.remove('active');
+            countElement.textContent = '0 selected';
+        }
+    }
+
+    updateVideoSelectionUI() {
+        document.querySelectorAll('.video-item').forEach(item => {
+            const videoId = item.dataset.videoId;
+            const checkbox = item.querySelector('.video-checkbox');
+            
+            if (this.selectedVideos.has(videoId)) {
+                item.classList.add('selected');
+                if (checkbox) checkbox.checked = true;
+            } else {
+                item.classList.remove('selected');
+                if (checkbox) checkbox.checked = false;
+            }
+        });
+    }
+
+    async addSelectedToPlaylist() {
+        if (this.selectedVideos.size === 0) {
+            this.showStatus('No videos selected', 'warning');
+            return;
+        }
+
+        if (this.playlists.length === 0) {
+            this.showStatus('No playlists available. Create one first.', 'warning');
+            return;
+        }
+
+        const playlistNames = this.playlists.map((p, i) => `${i + 1}. ${p.title}`).join('\n');
+        const selection = prompt(`Add ${this.selectedVideos.size} videos to playlist:\n${playlistNames}\n\nEnter number:`);
+        
+        if (selection) {
+            const index = parseInt(selection) - 1;
+            if (index >= 0 && index < this.playlists.length) {
+                await this.addVideosToPlaylist(this.playlists[index].id, Array.from(this.selectedVideos));
+            }
+        }
+    }
+
+    async addVideosToPlaylist(playlistId, videoIds) {
+        try {
+            this.setLoading('recommendationsContent', true, 'Adding videos to playlist...');
+            this.showStatus(`Adding ${videoIds.length} videos to playlist...`, 'info');
+            
+            for (const videoId of videoIds) {
+                await this.sendMessage({
+                    action: 'addVideoToPlaylist',
+                    playlistId: playlistId,
+                    videoId: videoId
+                });
+            }
+
+            this.showStatus(`${videoIds.length} videos added to playlist!`, 'success');
+            this.clearSelection();
+
+        } catch (error) {
+            console.error('Error adding videos to playlist:', error);
+            this.showStatus('Failed to add videos to playlist', 'error');
+        } finally {
+            this.setLoading('recommendationsContent', false);
         }
     }
 
@@ -258,6 +703,7 @@ class MDWTubePopup {
         if (!this.isAuthenticated) return;
 
         try {
+            this.setLoading('playlistsContent', true, 'Loading playlists...');
             const response = await this.sendMessage({ action: 'getPlaylists' });
             if (response.success) {
                 this.playlists = response.data;
@@ -265,6 +711,8 @@ class MDWTubePopup {
             }
         } catch (error) {
             console.error('Error loading playlists:', error);
+        } finally {
+            this.setLoading('playlistsContent', false);
         }
     }
 
@@ -278,6 +726,7 @@ class MDWTubePopup {
         }
 
         try {
+            this.setLoading('playlistsContent', true, 'Creating playlist...');
             this.showStatus('Creating playlist...', 'info');
             
             const response = await this.sendMessage({
@@ -297,6 +746,8 @@ class MDWTubePopup {
         } catch (error) {
             console.error('Error creating playlist:', error);
             this.showStatus('Failed to create playlist', 'error');
+        } finally {
+            this.setLoading('playlistsContent', false);
         }
     }
 
@@ -314,13 +765,21 @@ class MDWTubePopup {
                 <img class="channel-thumbnail" src="${sub.thumbnail}" alt="${this.escapeHtml(sub.title)}">
                 <div class="channel-info">
                     <div class="channel-title">${this.escapeHtml(sub.title)}</div>
-                    <div class="channel-description">${this.escapeHtml(sub.description || '')}</div>
+                    <div class="channel-meta">
+                        <span class="channel-subscribers">${sub.subscriberCount || 'Unknown'} subscribers</span>
+                    </div>
                 </div>
-                <label class="channel-toggle">
-                    <input type="checkbox" ${this.enabledChannels.has(sub.channelId) ? 'checked' : ''} 
-                           data-channel-id="${sub.channelId}">
-                    <span class="toggle-slider"></span>
-                </label>
+                <div class="channel-controls">
+                    <input type="number" class="video-count-input" 
+                           value="${this.channelVideoCount.get(sub.channelId) || 5}" min="1" max="20" 
+                           data-channel-id="${sub.channelId}" 
+                           title="Videos per channel">
+                    <label class="channel-toggle">
+                        <input type="checkbox" ${this.enabledChannels.has(sub.channelId) ? 'checked' : ''} 
+                               data-channel-id="${sub.channelId}">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
             </div>
         `).join('');
 
@@ -337,6 +796,17 @@ class MDWTubePopup {
             });
         });
 
+        // Add event listeners for video count inputs
+        container.querySelectorAll('.video-count-input').forEach(input => {
+            input.addEventListener('change', (e) => {
+                const channelId = e.target.dataset.channelId;
+                const count = parseInt(e.target.value) || 5;
+                this.channelVideoCount.set(channelId, count);
+                this.saveChannelVideoCount();
+                this.updateVideoCountDisplay();
+            });
+        });
+
         // Add error handling for images
         container.querySelectorAll('.channel-thumbnail').forEach(img => {
             img.addEventListener('error', () => {
@@ -350,50 +820,86 @@ class MDWTubePopup {
         if (!container) return;
 
         if (videos.length === 0) {
-            container.innerHTML = '<div class="empty-state">No recommendations available</div>';
+            container.innerHTML = '<div class="empty-state">No unwatched videos available</div>';
+            this.updateMultiSelectControls();
             return;
         }
 
         container.innerHTML = videos.map(video => `
             <div class="video-item" data-video-id="${video.videoId}">
-                <img class="video-thumbnail" src="${video.thumbnail}" alt="${this.escapeHtml(video.title)}">
-                <div class="video-info">
-                    <div class="video-title">${this.escapeHtml(video.title)}</div>
-                    <div class="video-channel">${this.escapeHtml(video.channelTitle)}</div>
-                    <div class="video-published">${this.formatDate(video.publishedAt)}</div>
+                <input type="checkbox" class="video-checkbox" data-video-id="${video.videoId}">
+                <div class="video-thumbnail-container">
+                    <img class="video-thumbnail" src="${video.thumbnail}" alt="${this.escapeHtml(video.title)}">
+                    <div class="video-duration">${this.formatDuration(video.duration)}</div>
                 </div>
-                <div class="video-actions">
-                    <button class="btn btn-primary watch-btn" data-video-id="${video.videoId}">
-                        Watch
-                    </button>
-                    <button class="btn btn-secondary add-to-playlist-btn" data-video-id="${video.videoId}">
-                        Add to Playlist
-                    </button>
+                <div class="video-content">
+                    <div class="video-title">${this.escapeHtml(video.title)}</div>
+                    <div class="video-stats">
+                        <span>${this.formatViews(video.viewCount)} views</span>
+                        <span>•</span>
+                        <span>${this.formatDate(video.publishedAt)}</span>
+                    </div>
+                    <div class="video-actions">
+                        <button class="btn btn-primary watch-btn" data-video-id="${video.videoId}">
+                            Watch
+                        </button>
+                        <button class="btn btn-secondary add-to-playlist-btn" data-video-id="${video.videoId}">
+                            Add to Playlist
+                        </button>
+                    </div>
                 </div>
             </div>
         `).join('');
 
+        // Add event listeners for video selection
+        container.querySelectorAll('.video-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                const videoId = e.target.dataset.videoId;
+                this.toggleVideoSelection(videoId);
+            });
+        });
+
         // Add event listeners for video actions
         container.querySelectorAll('.watch-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
+                e.stopPropagation();
                 const videoId = e.target.dataset.videoId;
+                this.markVideoAsWatched(videoId);
                 window.open(`https://youtube.com/watch?v=${videoId}`, '_blank');
             });
         });
 
         container.querySelectorAll('.add-to-playlist-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
+                e.stopPropagation();
                 const videoId = e.target.dataset.videoId;
                 this.showPlaylistSelector(videoId);
+            });
+        });
+
+        // Add click handlers for video items (excluding buttons and checkbox)
+        container.querySelectorAll('.video-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                // Don't toggle selection if clicking on buttons or checkbox
+                if (e.target.classList.contains('btn') || 
+                    e.target.classList.contains('video-checkbox') ||
+                    e.target.closest('.video-actions')) {
+                    return;
+                }
+                
+                const videoId = item.dataset.videoId;
+                this.toggleVideoSelection(videoId);
             });
         });
 
         // Add error handling for video thumbnails
         container.querySelectorAll('.video-thumbnail').forEach(img => {
             img.addEventListener('error', () => {
-                img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iNDUiIHZpZXdCb3g9IjAgMCA4MCA0NSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjQ1IiBmaWxsPSIjZjVmNWY1Ii8+Cjx0ZXh0IHg9IjQwIiB5PSIyNSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzk5OTk5OSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTIiPk5vIEltYWdlPC90ZXh0Pgo8L3N2Zz4=';
+                img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjY4IiB2aWV3Qm94PSIwIDAgMTIwIDY4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTIwIiBoZWlnaHQ9IjY4IiBmaWxsPSIjMzAzMDMwIi8+Cjx0ZXh0IHg9IjYwIiB5PSIzOCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2FhYSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTIiPk5vIEltYWdlPC90ZXh0Pgo8L3N2Zz4=';
             });
         });
+
+        this.updateVideoSelectionUI();
     }
 
     renderPlaylists() {
@@ -410,15 +916,16 @@ class MDWTubePopup {
                 <img class="playlist-thumbnail" src="${playlist.thumbnail || '/icons/icon48.png'}" alt="${this.escapeHtml(playlist.title)}">
                 <div class="playlist-info">
                     <div class="playlist-title">${this.escapeHtml(playlist.title)}</div>
-                    <div class="playlist-description">${this.escapeHtml(playlist.description || '')}</div>
-                    <div class="playlist-count">${playlist.itemCount} videos</div>
+                    <div class="playlist-meta">
+                        <span class="playlist-count">${playlist.itemCount} videos</span>
+                    </div>
                 </div>
                 <div class="playlist-actions">
                     <button class="btn btn-primary view-playlist-btn external-link" data-playlist-id="${playlist.id}">
                         View
                     </button>
-                    <button class="btn btn-secondary manage-playlist-btn" data-playlist-id="${playlist.id}">
-                        Manage
+                    <button class="btn btn-delete delete-playlist-btn" data-playlist-id="${playlist.id}">
+                        Delete
                     </button>
                 </div>
             </div>
@@ -432,19 +939,49 @@ class MDWTubePopup {
             });
         });
 
-        container.querySelectorAll('.manage-playlist-btn').forEach(btn => {
+        container.querySelectorAll('.delete-playlist-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const playlistId = e.target.dataset.playlistId;
-                this.viewPlaylistItems(playlistId);
+                const playlist = this.playlists.find(p => p.id === playlistId);
+                this.deletePlaylist(playlistId, playlist?.title);
             });
         });
 
         // Add error handling for playlist thumbnails
         container.querySelectorAll('.playlist-thumbnail').forEach(img => {
             img.addEventListener('error', () => {
-                img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iNDUiIHZpZXdCb3g9IjAgMCA4MCA0NSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjQ1IiBmaWxsPSIjZjVmNWY1Ii8+Cjx0ZXh0IHg9IjQwIiB5PSIyNSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzk5OTk5OSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTAiPlBsYXlsaXN0PC90ZXh0Pgo8L3N2Zz4=';
+                img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iNDUiIHZpZXdCb3g9IjAgMCA4MCA0NSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjQ1IiBmaWxsPSIjMzAzMDMwIi8+Cjx0ZXh0IHg9IjQwIiB5PSIyNSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2FhYSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTAiPlBsYXlsaXN0PC90ZXh0Pgo8L3N2Zz4=';
             });
         });
+    }
+
+    async deletePlaylist(playlistId, playlistTitle) {
+        const confirmation = confirm(`Are you sure you want to delete the playlist "${playlistTitle}"?\n\nThis action cannot be undone.`);
+        
+        if (!confirmation) return;
+
+        try {
+            this.setLoading('playlistsContent', true, 'Deleting playlist...');
+            this.showStatus('Deleting playlist...', 'info');
+            
+            const response = await this.sendMessage({
+                action: 'deletePlaylist',
+                playlistId: playlistId
+            });
+
+            if (response.success) {
+                this.showStatus('Playlist deleted successfully!', 'success');
+                await this.loadPlaylists();
+            } else {
+                throw new Error(response.error || 'Failed to delete playlist');
+            }
+
+        } catch (error) {
+            console.error('Error deleting playlist:', error);
+            this.showStatus('Failed to delete playlist', 'error');
+        } finally {
+            this.setLoading('playlistsContent', false);
+        }
     }
 
     async showPlaylistSelector(videoId) {
@@ -453,7 +990,6 @@ class MDWTubePopup {
             return;
         }
 
-        // Simple prompt for now - could be enhanced with a modal
         const playlistNames = this.playlists.map((p, i) => `${i + 1}. ${p.title}`).join('\n');
         const selection = prompt(`Select playlist:\n${playlistNames}\n\nEnter number:`);
         
@@ -467,6 +1003,7 @@ class MDWTubePopup {
 
     async addVideoToPlaylist(playlistId, videoId) {
         try {
+            this.setLoading('recommendationsContent', true, 'Adding video to playlist...');
             this.showStatus('Adding video to playlist...', 'info');
             
             const response = await this.sendMessage({
@@ -484,51 +1021,61 @@ class MDWTubePopup {
         } catch (error) {
             console.error('Error adding video to playlist:', error);
             this.showStatus('Failed to add video to playlist', 'error');
-        }
-    }
-
-    async viewPlaylistItems(playlistId) {
-        try {
-            const response = await this.sendMessage({
-                action: 'getPlaylistItems',
-                playlistId: playlistId
-            });
-
-            if (response.success) {
-                // For now, just log the items - could be enhanced with a detailed view
-                console.log('Playlist items:', response.data);
-                this.showStatus(`Playlist has ${response.data.length} items`, 'info');
-            }
-
-        } catch (error) {
-            console.error('Error loading playlist items:', error);
-            this.showStatus('Failed to load playlist items', 'error');
+        } finally {
+            this.setLoading('recommendationsContent', false);
         }
     }
 
     showLoggedInState() {
-        document.getElementById('loginBtn').style.display = 'none';
-        document.getElementById('logoutBtn').style.display = 'block';
+        document.getElementById('authSection').style.display = 'none';
         document.getElementById('mainContent').style.display = 'block';
+        this.renderHeaderUser();
     }
 
     showLoggedOutState() {
-        document.getElementById('loginBtn').style.display = 'block';
-        document.getElementById('loginBtn').disabled = false;
-        document.getElementById('logoutBtn').style.display = 'none';
+        document.getElementById('authSection').style.display = 'block';
         document.getElementById('mainContent').style.display = 'none';
+        this.renderHeaderGuest();
+    }
+
+    renderHeaderUser() {
+        const headerRight = document.getElementById('headerRight');
+        const username = this.userInfo?.title || 'User';
+        const avatarLetter = username.charAt(0).toUpperCase();
+        
+        headerRight.innerHTML = `
+            <div class="user-info">
+                <div class="user-avatar">${avatarLetter}</div>
+                <span class="username">${this.escapeHtml(username)}</span>
+            </div>
+            <button class="sign-out-btn" id="signOutBtn">Sign Out</button>
+        `;
+
+        // Add event listener for sign out
+        document.getElementById('signOutBtn').addEventListener('click', () => this.logout());
+    }
+
+    renderHeaderGuest() {
+        const headerRight = document.getElementById('headerRight');
+        headerRight.innerHTML = '';
     }
 
     clearData() {
         this.subscriptions = [];
         this.playlists = [];
         this.enabledChannels.clear();
+        this.channelVideoCount.clear();
+        this.selectedVideos.clear();
+        this.allVideos = [];
         
         // Clear UI
         ['recommendationsContent', 'playlistsContent', 'channelsContent'].forEach(id => {
             const element = document.getElementById(id);
             if (element) element.innerHTML = '';
         });
+        
+        this.updateMultiSelectControls();
+        this.updateVideoCountDisplay();
     }
 
     showStatus(message, type = 'info') {
@@ -567,10 +1114,50 @@ class MDWTubePopup {
 
     formatDate(dateString) {
         try {
-            return new Date(dateString).toLocaleDateString();
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffTime = Math.abs(now - date);
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 0) return 'Today';
+            if (diffDays === 1) return 'Yesterday';
+            if (diffDays < 7) return `${diffDays} days ago`;
+            if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+            if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
+            return `${Math.floor(diffDays / 365)} years ago`;
         } catch {
             return 'Unknown date';
         }
+    }
+
+    formatDuration(duration) {
+        if (!duration) return '';
+        
+        // Convert ISO 8601 duration to readable format
+        const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+        if (!match) return '';
+        
+        const hours = parseInt(match[1]) || 0;
+        const minutes = parseInt(match[2]) || 0;
+        const seconds = parseInt(match[3]) || 0;
+        
+        if (hours > 0) {
+            return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        } else {
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+    }
+
+    formatViews(viewCount) {
+        if (!viewCount) return '0';
+        
+        const num = parseInt(viewCount);
+        if (num >= 1000000) {
+            return Math.floor(num / 1000000) + 'M';
+        } else if (num >= 1000) {
+            return Math.floor(num / 1000) + 'K';
+        }
+        return num.toString();
     }
 }
 
