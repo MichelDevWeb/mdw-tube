@@ -490,12 +490,18 @@
       opacity: 1;
     }
 
-    /* Enhanced video items with better layout */
+    /* Optimized video grid layout */
+    .videos-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* Enhanced video items - compact design */
     .video-item {
       display: flex;
       flex-direction: column;
       border-radius: 12px;
-      margin-bottom: 16px;
       background: #181818;
       border: 1px solid transparent;
       transition: all 0.3s ease;
@@ -508,7 +514,7 @@
       background: #212121;
       border-color: #404040;
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
     }
 
     .video-item.selected {
@@ -518,10 +524,10 @@
 
     .video-checkbox {
       position: absolute;
-      top: 8px;
-      left: 8px;
-      width: 18px;
-      height: 18px;
+      top: 6px;
+      left: 6px;
+      width: 16px;
+      height: 16px;
       opacity: 0;
       transition: opacity 0.2s;
       z-index: 2;
@@ -553,25 +559,25 @@
 
     .video-duration {
       position: absolute;
-      bottom: 8px;
-      right: 8px;
-      background: rgba(0, 0, 0, 0.8);
+      bottom: 6px;
+      right: 6px;
+      background: rgba(0, 0, 0, 0.9);
       color: white;
       padding: 2px 6px;
       border-radius: 4px;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 500;
     }
 
     .video-content {
-      padding: 12px;
+      padding: 10px;
       flex: 1;
       display: flex;
       flex-direction: column;
     }
 
     .video-title {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 500;
       line-height: 1.3;
       margin-bottom: 6px;
@@ -585,23 +591,392 @@
     .video-stats {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 11px;
+      gap: 4px;
+      font-size: 10px;
       color: #aaa;
       margin-bottom: 8px;
     }
 
     .video-actions {
       display: flex;
-      gap: 6px;
+      gap: 4px;
       margin-top: auto;
     }
 
-    .video-actions .btn {
+    .video-action-btn {
       flex: 1;
-      padding: 6px 10px;
-      font-size: 10px;
-      border-radius: 16px;
+      background: transparent;
+      border: 1px solid #606060;
+      color: #fff;
+      padding: 6px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .video-action-btn:hover {
+      background: #404040;
+      transform: scale(1.05);
+    }
+
+    .video-action-btn.watch:hover {
+      background: #ff0000;
+      border-color: #ff0000;
+    }
+
+    .video-action-btn.playlist:hover {
+      background: #059669;
+      border-color: #059669;
+    }
+
+    /* Video Details Modal - YouTube Style */
+    .video-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      backdrop-filter: blur(8px);
+    }
+
+    .video-modal.active {
+      display: flex;
+    }
+
+    .video-modal-content {
+      background: #0f0f0f;
+      border-radius: 12px;
+      width: 95%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow: hidden;
+      border: 1px solid #404040;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8);
+      animation: modalSlideIn 0.3s ease-out;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .video-modal-player {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: #000;
+      overflow: hidden;
+    }
+
+    .video-modal-thumbnail {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .video-modal-play-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 68px;
+      height: 48px;
+      background: rgba(0, 0, 0, 0.8);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .video-modal-play-overlay:hover {
+      background: rgba(255, 0, 0, 0.9);
+      transform: translate(-50%, -50%) scale(1.1);
+    }
+
+    .video-modal-play-icon {
+      color: white;
+      font-size: 20px;
+      margin-left: 3px;
+    }
+
+    .video-modal-duration {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .video-modal-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(0, 0, 0, 0.8);
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      transition: all 0.2s;
+      z-index: 10;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .video-modal-close:hover {
+      background: rgba(0, 0, 0, 0.9);
+      transform: scale(1.1);
+    }
+
+    .video-modal-info {
+      padding: 16px 20px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .video-modal-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      line-height: 1.3;
+      margin-bottom: 8px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .video-modal-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      color: #aaa;
+    }
+
+    .video-modal-views {
+      color: #fff;
+      font-weight: 500;
+    }
+
+    .video-modal-date {
+      color: #aaa;
+    }
+
+    .video-modal-channel-section {
+      display: flex;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #404040;
+      margin-bottom: 16px;
+    }
+
+    .video-modal-channel-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #ff0000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+
+    .video-modal-channel-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .video-modal-channel-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: #fff;
+      margin-bottom: 2px;
+    }
+
+    .video-modal-channel-subs {
+      font-size: 12px;
+      color: #aaa;
+    }
+
+    .video-modal-actions {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .video-modal-action-btn {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .video-modal-action-btn.watch {
+      background: #ff0000;
+      color: white;
+    }
+
+    .video-modal-action-btn.watch:hover {
+      background: #cc0000;
+      transform: translateY(-1px);
+    }
+
+    .video-modal-action-btn.playlist {
+      background: #303030;
+      color: #fff;
+      border: 1px solid #606060;
+    }
+
+    .video-modal-action-btn.playlist:hover {
+      background: #404040;
+      border-color: #808080;
+      transform: translateY(-1px);
+    }
+
+    .video-modal-description {
+      background: #181818;
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid #404040;
+    }
+
+    .video-modal-description-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .video-modal-description-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .video-modal-description-toggle {
+      background: transparent;
+      border: none;
+      color: #aaa;
+      cursor: pointer;
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .video-modal-description-toggle:hover {
+      background: #404040;
+      color: #fff;
+    }
+
+    .video-modal-description-text {
+      font-size: 13px;
+      color: #ccc;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      max-height: 120px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .video-modal-description-text.expanded {
+      max-height: none;
+    }
+
+    .video-modal-description-text.has-fade::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 30px;
+      background: linear-gradient(transparent, #181818);
+      pointer-events: none;
+    }
+
+    .video-modal-description-text.expanded::after {
+      display: none;
+    }
+
+    .video-modal-stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #404040;
+    }
+
+    .video-modal-stat-item {
+      text-align: center;
+      padding: 8px;
+      background: #212121;
+      border-radius: 8px;
+      border: 1px solid #404040;
+    }
+
+    .video-modal-stat-value {
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 2px;
+    }
+
+    .video-modal-stat-label {
+      font-size: 11px;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    @media (max-width: 450px) {
+      .video-modal-content {
+        width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+      }
+
+      .video-modal-info {
+        padding: 12px 16px;
+      }
+
+      .video-modal-stats-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
     }
 
     /* Channel items with improved layout */
@@ -1110,23 +1485,23 @@
       background: #808080;
     }
 
+    .video-modal-content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .video-modal-content::-webkit-scrollbar-track {
+      background: #212121;
+    }
+
+    .video-modal-content::-webkit-scrollbar-thumb {
+      background: #606060;
+      border-radius: 3px;
+    }
+
     .external-link::after {
       content: " ↗";
       font-size: 10px;
       opacity: 0.7;
-    }
-
-    /* Video grid layout for better space usage */
-    .videos-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    @media (max-width: 450px) {
-      .videos-grid {
-        grid-template-columns: 1fr;
-      }
     }
   </style>
 </head>
@@ -1169,6 +1544,11 @@
         <div id="recommendationsTab" class="tab-content active">
           <div class="section-header">
             <div class="section-title">Recommended Videos</div>
+            <div class="section-actions">
+              <button id="refreshVideosBtn" class="icon-btn" data-tooltip="Refresh videos">
+                🔄
+              </button>
+            </div>
           </div>
 
           <!-- Video Controls - Optimized -->
@@ -1180,9 +1560,6 @@
               </button>
               <button id="autoPlaylistBtn" class="control-icon-btn auto-playlist" data-tooltip="Create auto playlist">
                 📅
-              </button>
-              <button id="refreshBtn" class="control-icon-btn refresh" data-tooltip="Load more videos">
-                🔄
               </button>
             </div>
           </div>
@@ -1259,6 +1636,74 @@
                 <span class="loading-text">Loading playlists...</span>
               </div>
               <span class="loading-wait">Please wait...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Video Details Modal -->
+    <div id="videoModal" class="video-modal">
+      <div class="video-modal-content">
+        <!-- Video Player Section -->
+        <div class="video-modal-player">
+          <img id="videoModalThumbnail" class="video-modal-thumbnail" src="" alt="Video thumbnail">
+          <div id="videoModalPlayOverlay" class="video-modal-play-overlay">
+            <div class="video-modal-play-icon">▶</div>
+          </div>
+          <div id="videoModalDuration" class="video-modal-duration"></div>
+          <button id="videoModalClose" class="video-modal-close">×</button>
+        </div>
+        
+        <!-- Video Info Section -->
+        <div class="video-modal-info">
+          <div id="videoModalTitle" class="video-modal-title"></div>
+          
+          <div class="video-modal-meta">
+            <span id="videoModalViews" class="video-modal-views"></span>
+            <span>•</span>
+            <span id="videoModalDate" class="video-modal-date"></span>
+          </div>
+          
+          <!-- Channel Section -->
+          <div class="video-modal-channel-section">
+            <div id="videoModalChannelAvatar" class="video-modal-channel-avatar"></div>
+            <div class="video-modal-channel-info">
+              <div id="videoModalChannelName" class="video-modal-channel-name"></div>
+              <div id="videoModalChannelSubs" class="video-modal-channel-subs"></div>
+            </div>
+          </div>
+          
+          <!-- Action Buttons -->
+          <div class="video-modal-actions">
+            <button id="videoModalWatch" class="video-modal-action-btn watch">
+              ▶️ Watch Now
+            </button>
+            <button id="videoModalPlaylist" class="video-modal-action-btn playlist">
+              ➕ Add to Playlist
+            </button>
+          </div>
+          
+          <!-- Description -->
+          <div class="video-modal-description">
+            <div class="video-modal-description-header">
+              <div class="video-modal-description-title">Description</div>
+              <button id="videoModalDescriptionToggle" class="video-modal-description-toggle">
+                Show More
+              </button>
+            </div>
+            <div id="videoModalDescription" class="video-modal-description-text"></div>
+          </div>
+          
+          <!-- Stats Grid -->
+          <div class="video-modal-stats-grid">
+            <div class="video-modal-stat-item">
+              <div id="videoModalStatViews" class="video-modal-stat-value"></div>
+              <div class="video-modal-stat-label">Views</div>
+            </div>
+            <div class="video-modal-stat-item">
+              <div id="videoModalStatDuration" class="video-modal-stat-value"></div>
+              <div class="video-modal-stat-label">Duration</div>
             </div>
           </div>
         </div>

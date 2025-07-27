@@ -111,20 +111,33 @@ MDW Tube is a powerful Chrome extension that revolutionizes how you discover, or
 
 ## 🆕 What's New in Latest Version
 
+### 🎬 **YouTube-Style Video Modal**
+- **Professional Video Player**: Full-width video player with play overlay and duration display
+- **Rich Video Information**: Comprehensive video details in YouTube-inspired layout
+- **Channel Section**: Channel avatar, name, and subscriber count display
+- **Expandable Description**: Show More/Less functionality for long descriptions
+- **Statistics Grid**: Dedicated stats section for views and duration
+- **Enhanced UX**: Smooth animations, backdrop blur, and responsive design
+
 ### 🔄 **Enhanced Video Management**
-- **Smart Refresh**: Refresh button now loads fresh videos from API
+- **Smart Refresh**: Refresh button now loads fresh videos from API with force parameter
+- **Cache Bypass**: Force refresh option bypasses cache for latest content
 - **Instant Loading**: Videos appear immediately when extension opens
 - **Improved Channel Layout**: Video count input moved next to toggle for better UX
+- **Grid Optimization**: 2-column video grid for better space utilization
 
 ### 🎨 **Better User Experience**
 - **Professional Loading States**: All API operations show loading with "Please wait..." messages
 - **Streamlined Support**: Support button moved to header for easy access
 - **Enhanced Tooltips**: Better descriptions for all action buttons
+- **Icon-Based Actions**: Video actions use intuitive icons (▶️ Watch, ➕ Add to Playlist)
+- **Modal Interactions**: Click anywhere on video card to open detailed modal
 
 ### ⚡ **Performance Improvements**
 - **Faster Initial Load**: Videos load automatically on first open
 - **Better Error Handling**: Clear error messages and fallback states
-- **Optimized API Calls**: More efficient data loading and caching
+- **Optimized API Calls**: More efficient data loading with smart caching
+- **Force Refresh**: API-level cache bypass for truly fresh content
 
 ## 🔮 Future Roadmap
 

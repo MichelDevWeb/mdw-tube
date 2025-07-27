@@ -25,7 +25,7 @@
     "128": "icons/icon128.png"
   },
   "oauth2": {
-    "client_id": "362844435268-rb8vufp6gsh7gslsru82fuo6kgptfi7t.apps.googleusercontent.com",
+    "client_id": "",
     "scopes": [
       "https://www.googleapis.com/auth/youtube.readonly",
       "https://www.googleapis.com/auth/youtube",

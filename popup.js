@@ -12,6 +12,7 @@ class MDWTubePopup {
         this.selectedVideos = new Set();
         this.watchedVideos = new Set();
         this.allVideos = [];
+        this.currentVideoModal = null; // Current video in modal
         this.init();
     }
 
@@ -40,32 +41,50 @@ class MDWTubePopup {
         // Video controls
         document.getElementById('shuffleBtn').addEventListener('click', () => this.shuffleVideos());
         document.getElementById('autoPlaylistBtn').addEventListener('click', () => this.createAutoPlaylist());
-        document.getElementById('refreshBtn').addEventListener('click', () => this.refreshVideos());
 
         // Multi-select controls
         document.getElementById('addSelectedBtn').addEventListener('click', () => this.addSelectedToPlaylist());
         document.getElementById('clearSelectionBtn').addEventListener('click', () => this.clearSelection());
 
         // Refresh buttons for tabs
+        document.getElementById('refreshVideosBtn').addEventListener('click', () => this.refreshVideos());
         document.getElementById('refreshChannelsBtn').addEventListener('click', () => this.refreshChannels());
         document.getElementById('refreshPlaylistsBtn').addEventListener('click', () => this.refreshPlaylists());
+
+        // Video modal
+        document.getElementById('videoModalClose').addEventListener('click', () => this.closeVideoModal());
+        document.getElementById('videoModalPlayOverlay').addEventListener('click', () => this.watchVideoFromModal());
+        document.getElementById('videoModalWatch').addEventListener('click', () => this.watchVideoFromModal());
+        document.getElementById('videoModalPlaylist').addEventListener('click', () => this.addVideoToPlaylistFromModal());
+        document.getElementById('videoModalDescriptionToggle').addEventListener('click', () => this.toggleVideoDescription());
+        
+        // Close video modal when clicking outside
+        document.getElementById('videoModal').addEventListener('click', (e) => {
+            if (e.target.id === 'videoModal') {
+                this.closeVideoModal();
+            }
+        });
 
         // Support modal
         document.getElementById('supportBtnHeader').addEventListener('click', () => this.openSupportModal());
         document.getElementById('supportModalClose').addEventListener('click', () => this.closeSupportModal());
         document.getElementById('donateBtn').addEventListener('click', () => this.showDonateInfo());
         
-        // Close modal when clicking outside
+        // Close support modal when clicking outside
         document.getElementById('supportModal').addEventListener('click', (e) => {
             if (e.target.id === 'supportModal') {
                 this.closeSupportModal();
             }
         });
 
-        // Close modal with Escape key
+        // Close modals with Escape key
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && document.getElementById('supportModal').classList.contains('active')) {
-                this.closeSupportModal();
+            if (e.key === 'Escape') {
+                if (document.getElementById('videoModal').classList.contains('active')) {
+                    this.closeVideoModal();
+                } else if (document.getElementById('supportModal').classList.contains('active')) {
+                    this.closeSupportModal();
+                }
             }
         });
 
@@ -74,6 +93,89 @@ class MDWTubePopup {
             console.error('Unhandled promise rejection:', e.reason);
             this.showStatus('An error occurred. Please try again.', 'error');
         });
+    }
+
+    // Video Modal Methods
+    openVideoModal(video) {
+        this.currentVideoModal = video;
+        
+        // Populate video player section
+        document.getElementById('videoModalThumbnail').src = video.thumbnail;
+        document.getElementById('videoModalDuration').textContent = this.formatDuration(video.duration);
+        
+        // Populate video info
+        document.getElementById('videoModalTitle').textContent = video.title;
+        document.getElementById('videoModalViews').textContent = `${this.formatViews(video.viewCount)} views`;
+        document.getElementById('videoModalDate').textContent = this.formatDate(video.publishedAt);
+        
+        // Populate channel info
+        const channelName = video.channelTitle || 'Unknown Channel';
+        const channelAvatar = channelName.charAt(0).toUpperCase();
+        document.getElementById('videoModalChannelAvatar').textContent = channelAvatar;
+        document.getElementById('videoModalChannelName').textContent = channelName;
+        
+        // Get channel subscriber count from subscriptions
+        const channelInfo = this.subscriptions.find(sub => sub.title === channelName);
+        const subscriberCount = channelInfo?.subscriberCount || 'Unknown subscribers';
+        document.getElementById('videoModalChannelSubs').textContent = subscriberCount;
+        
+        // Set description with Show More/Less functionality
+        const description = video.description || 'No description available';
+        const descriptionElement = document.getElementById('videoModalDescription');
+        descriptionElement.textContent = description;
+        
+        // Check if description is long enough to need toggle
+        if (description.length > 200) {
+            descriptionElement.classList.add('has-fade');
+            document.getElementById('videoModalDescriptionToggle').style.display = 'block';
+        } else {
+            descriptionElement.classList.remove('has-fade');
+            document.getElementById('videoModalDescriptionToggle').style.display = 'none';
+        }
+        
+        // Reset description state
+        descriptionElement.classList.remove('expanded');
+        document.getElementById('videoModalDescriptionToggle').textContent = 'Show More';
+        
+        // Populate stats grid
+        document.getElementById('videoModalStatViews').textContent = this.formatViews(video.viewCount);
+        document.getElementById('videoModalStatDuration').textContent = this.formatDuration(video.duration);
+        
+        // Show modal
+        document.getElementById('videoModal').classList.add('active');
+    }
+
+    closeVideoModal() {
+        document.getElementById('videoModal').classList.remove('active');
+        this.currentVideoModal = null;
+    }
+
+    toggleVideoDescription() {
+        const descriptionElement = document.getElementById('videoModalDescription');
+        const toggleButton = document.getElementById('videoModalDescriptionToggle');
+        
+        if (descriptionElement.classList.contains('expanded')) {
+            descriptionElement.classList.remove('expanded');
+            toggleButton.textContent = 'Show More';
+        } else {
+            descriptionElement.classList.add('expanded');
+            toggleButton.textContent = 'Show Less';
+        }
+    }
+
+    watchVideoFromModal() {
+        if (this.currentVideoModal) {
+            this.markVideoAsWatched(this.currentVideoModal.videoId);
+            window.open(`https://youtube.com/watch?v=${this.currentVideoModal.videoId}`, '_blank');
+            this.closeVideoModal();
+        }
+    }
+
+    async addVideoToPlaylistFromModal() {
+        if (this.currentVideoModal) {
+            await this.showPlaylistSelector(this.currentVideoModal.videoId);
+            this.closeVideoModal();
+        }
     }
 
     openSupportModal() {
@@ -389,7 +491,7 @@ class MDWTubePopup {
         }
     }
 
-    async loadRecommendations() {
+    async loadRecommendations(forceRefresh = false) {
         if (!this.isAuthenticated || this.enabledChannels.size === 0) {
             document.getElementById('recommendationsContent').innerHTML = 
                 '<div class="empty-state">Enable some channels first</div>';
@@ -400,7 +502,8 @@ class MDWTubePopup {
 
         try {
             this.setLoading('recommendationsContent', true, 'Loading videos...');
-            this.showStatus('Loading recommendations...', 'info');
+            const statusMessage = forceRefresh ? 'Fetching fresh videos from API...' : 'Loading recommendations...';
+            this.showStatus(statusMessage, 'info');
             const enabledChannelIds = Array.from(this.enabledChannels);
             const videos = [];
 
@@ -410,7 +513,8 @@ class MDWTubePopup {
                 const response = await this.sendMessage({ 
                     action: 'getChannelVideos', 
                     channelId: channelId,
-                    limit: videoCount
+                    limit: videoCount,
+                    force: forceRefresh // Add force parameter to bypass cache
                 });
                 
                 if (response.success) {
@@ -426,7 +530,10 @@ class MDWTubePopup {
 
             this.allVideos = unwatchedVideos;
             this.renderRecommendations(unwatchedVideos);
-            this.showStatus(`Loaded ${unwatchedVideos.length} unwatched videos`, 'success');
+            const successMessage = forceRefresh ? 
+                `Refreshed ${unwatchedVideos.length} fresh videos from API` : 
+                `Loaded ${unwatchedVideos.length} unwatched videos`;
+            this.showStatus(successMessage, 'success');
             this.updateVideoCountDisplay();
 
         } catch (error) {
@@ -446,13 +553,14 @@ class MDWTubePopup {
         }
 
         try {
-            this.setLoading('recommendationsContent', true, 'Loading more videos...');
-            this.showStatus('Loading more videos...', 'info');
+            this.setLoading('recommendationsContent', true, 'Refreshing videos...');
+            this.showStatus('Refreshing videos from API...', 'info');
             
-            // Clear current videos and reload fresh content
+            // Clear current videos and reload fresh content from API with force parameter
             this.allVideos = [];
             this.clearSelection();
             
+            // await this.loadRecommendations(true); // Force refresh from API
             await this.loadRecommendations();
             
         } catch (error) {
@@ -562,13 +670,14 @@ class MDWTubePopup {
             const btn = document.getElementById('refreshChannelsBtn');
             btn.disabled = true;
             this.setLoading('channelsContent', true, 'Refreshing channels data...');
-            this.showStatus('Refreshing channels data...', 'info');
+            this.showStatus('Refreshing channels data from API...', 'info');
 
+            // Call API to get fresh channels data
             const response = await this.sendMessage({ action: 'getSubscriptions' });
             if (response.success) {
                 this.subscriptions = response.data;
                 this.renderSubscriptions();
-                this.showStatus(`Refreshed ${this.subscriptions.length} channels`, 'success');
+                this.showStatus(`Refreshed ${this.subscriptions.length} channels from API`, 'success');
             } else {
                 throw new Error(response.error || 'Failed to refresh channels');
             }
@@ -589,13 +698,14 @@ class MDWTubePopup {
             const btn = document.getElementById('refreshPlaylistsBtn');
             btn.disabled = true;
             this.setLoading('playlistsContent', true, 'Refreshing playlists...');
-            this.showStatus('Refreshing playlists...', 'info');
+            this.showStatus('Refreshing playlists from API...', 'info');
 
+            // Call API to get fresh playlists data
             const response = await this.sendMessage({ action: 'getPlaylists' });
             if (response.success) {
                 this.playlists = response.data;
                 this.renderPlaylists();
-                this.showStatus(`Refreshed ${this.playlists.length} playlists`, 'success');
+                this.showStatus(`Refreshed ${this.playlists.length} playlists from API`, 'success');
             } else {
                 throw new Error(response.error || 'Failed to refresh playlists');
             }
@@ -840,11 +950,11 @@ class MDWTubePopup {
                         <span>${this.formatDate(video.publishedAt)}</span>
                     </div>
                     <div class="video-actions">
-                        <button class="btn btn-primary watch-btn" data-video-id="${video.videoId}">
-                            Watch
+                        <button class="video-action-btn watch" data-video-id="${video.videoId}" title="Watch video">
+                            ▶️
                         </button>
-                        <button class="btn btn-secondary add-to-playlist-btn" data-video-id="${video.videoId}">
-                            Add to Playlist
+                        <button class="video-action-btn playlist" data-video-id="${video.videoId}" title="Add to playlist">
+                            ➕
                         </button>
                     </div>
                 </div>
@@ -860,7 +970,7 @@ class MDWTubePopup {
         });
 
         // Add event listeners for video actions
-        container.querySelectorAll('.watch-btn').forEach(btn => {
+        container.querySelectorAll('.video-action-btn.watch').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const videoId = e.target.dataset.videoId;
@@ -869,7 +979,7 @@ class MDWTubePopup {
             });
         });
 
-        container.querySelectorAll('.add-to-playlist-btn').forEach(btn => {
+        container.querySelectorAll('.video-action-btn.playlist').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const videoId = e.target.dataset.videoId;
@@ -880,15 +990,19 @@ class MDWTubePopup {
         // Add click handlers for video items (excluding buttons and checkbox)
         container.querySelectorAll('.video-item').forEach(item => {
             item.addEventListener('click', (e) => {
-                // Don't toggle selection if clicking on buttons or checkbox
-                if (e.target.classList.contains('btn') || 
+                // Don't open modal if clicking on buttons or checkbox
+                if (e.target.classList.contains('video-action-btn') || 
                     e.target.classList.contains('video-checkbox') ||
                     e.target.closest('.video-actions')) {
                     return;
                 }
                 
+                // Open video modal on click
                 const videoId = item.dataset.videoId;
-                this.toggleVideoSelection(videoId);
+                const video = videos.find(v => v.videoId === videoId);
+                if (video) {
+                    this.openVideoModal(video);
+                }
             });
         });
 

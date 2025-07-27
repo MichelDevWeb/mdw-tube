@@ -1,5 +1,5 @@
 // background.js - Enhanced Service Worker for MDW Tube
-const CLIENT_ID = '362844435268-rb8vufp6gsh7gslsru82fuo6kgptfi7t.apps.googleusercontent.com';
+const CLIENT_ID = '';
 const SCOPES = [
   'https://www.googleapis.com/auth/youtube',
   'https://www.googleapis.com/auth/youtube.force-ssl'
@@ -46,7 +46,7 @@ class MDWTubeManager {
           break;
 
         case 'getChannelVideos':
-          const videos = await this.getChannelVideos(request.channelId, request.limit);
+          const videos = await this.getChannelVideos(request.channelId, request.limit, request.force);
           sendResponse({ success: true, data: videos });
           break;
 
@@ -270,9 +270,11 @@ class MDWTubeManager {
     return subscriptions;
   }
 
-  async getChannelVideos(channelId, limit = 10) {
+  async getChannelVideos(channelId, limit = 10, force = false) {
     const cacheKey = `channel_videos_${channelId}_${limit}`;
-    if (this.cache.has(cacheKey)) {
+    
+    // Skip cache if force refresh is requested
+    if (!force && this.cache.has(cacheKey)) {
       return this.cache.get(cacheKey);
     }
 
