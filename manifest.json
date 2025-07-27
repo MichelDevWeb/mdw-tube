@@ -1,0 +1,58 @@
+{
+  "manifest_version": 3,
+  "name": "MDW Tube - YouTube Playlist Manager",
+  "version": "1.0.0",
+  "description": "Manage YouTube playlists from your subscribed channels with smart recommendations",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "tabs",
+    "notifications",
+    "alarms",
+    "scripting",
+    "contextMenus",
+    "identity"
+  ],
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "https://youtube.com/*",
+    "https://www.googleapis.com/*",
+    "https://accounts.google.com/*"
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png", 
+    "128": "icons/icon128.png"
+  },
+  "oauth2": {
+    "client_id": "362844435268-rb8vufp6gsh7gslsru82fuo6kgptfi7t.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/youtube.readonly",
+      "https://www.googleapis.com/auth/youtube",
+      "https://www.googleapis.com/auth/youtube.force-ssl"
+    ]
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  
+  "content_scripts": [{
+    "matches": ["https://www.youtube.com/*"],
+    "js": ["content.js"],
+    "css": ["content.css"]
+  }],
+  
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "MDW Tube Manager"
+  },
+  
+  "web_accessible_resources": [{
+    "resources": [
+      "popup.html", 
+      "icons/*.png",
+      "styles/*.css"
+    ],
+    "matches": ["https://www.youtube.com/*"]
+  }]
+} 
